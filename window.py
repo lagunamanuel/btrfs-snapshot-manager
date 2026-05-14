@@ -14,9 +14,15 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_content(box)
 
         header = Adw.HeaderBar()
+
+        # Refresh button in header
+        refresh_btn = Gtk.Button(icon_name='view-refresh-symbolic')
+        refresh_btn.set_tooltip_text('Refresh')
+        refresh_btn.connect('clicked', lambda _: self._load_subvolumes())
+        header.pack_end(refresh_btn)
+
         box.append(header)
 
-        # Scrollable list
         scroll = Gtk.ScrolledWindow()
         scroll.set_vexpand(True)
         box.append(scroll)
@@ -33,8 +39,8 @@ class MainWindow(Adw.ApplicationWindow):
         self._load_subvolumes()
 
     def _load_subvolumes(self):
-        for row in self._list:
-            self._list.remove(row)
+        while child := self._list.get_first_child():
+            self._list.remove(child)
 
         subvolumes = btrfs.list_subvolumes()
 
