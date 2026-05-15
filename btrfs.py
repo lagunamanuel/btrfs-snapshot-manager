@@ -60,3 +60,10 @@ def create_snapshot(subvolume_path, name):
 
     finally:
         subprocess.run(['sudo', 'umount', MOUNT_POINT])
+
+def default_snapshot_name(subvolume_path):
+    """Returns a default snapshot name based on subvolume and current datetime."""
+    from datetime import datetime
+    date = datetime.now().strftime('%Y-%m-%d_%H-%M')
+    subvol = subvolume_path.replace('/', '-')
+    return f'{subvol}-{date}'
