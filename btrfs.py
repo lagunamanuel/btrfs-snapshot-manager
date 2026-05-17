@@ -67,3 +67,29 @@ def default_snapshot_name(subvolume_path):
     date = datetime.now().strftime('%Y-%m-%d_%H-%M')
     subvol = subvolume_path.replace('/', '-')
     return f'{subvol}-{date}'
+
+def is_snapshot(subvolume):
+    """Returns True if the subvolume is a snapshot (lives inside .snapshots)."""
+    return subvolume['path'].startswith('.snapshots/')
+
+def delete_snapshot(path):
+    """Deletes a snapshot from /.snapshots."""
+    device = _get_device()
+
+    try:
+        subprocess.run(
+            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            check=True
+        )
+
+        target = f'{MOUNT_POINT}/.snapshots/{path.split("/")[-1]}'
+        result = subprocess.run(
+            ['sudo', 'btrfs', 'subvolume', 'delete', target],
+            capture_output=True,
+            text=True
+        )
+
+        return result.returncode == 0, result.stderr.strip()
+
+    finally:
+        subprocess.run(['sudo', 'umount', MOUNT_POINT])
