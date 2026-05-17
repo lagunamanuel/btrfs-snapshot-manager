@@ -67,3 +67,7 @@ def default_snapshot_name(subvolume_path):
     date = datetime.now().strftime('%Y-%m-%d_%H-%M')
     subvol = subvolume_path.replace('/', '-')
     return f'{subvol}-{date}'
+
+def is_snapshot(subvolume):
+    """Returns True if the subvolume is a snapshot (lives inside .snapshots)."""
+    return subvolume['path'].startswith('.snapshots/')
