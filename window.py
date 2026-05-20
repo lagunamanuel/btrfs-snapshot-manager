@@ -15,7 +15,6 @@ class MainWindow(Adw.ApplicationWindow):
 
         header = Adw.HeaderBar()
 
-        # Delete button — only active when a snapshot is selected
         self._del_btn = Gtk.Button(icon_name='user-trash-symbolic')
         self._del_btn.set_tooltip_text('Delete snapshot')
         self._del_btn.set_sensitive(False)
@@ -23,14 +22,12 @@ class MainWindow(Adw.ApplicationWindow):
         self._del_btn.connect('clicked', self._on_delete_snapshot)
         header.pack_end(self._del_btn)
 
-        # Add snapshot button — only active when a subvolume is selected
         self._add_btn = Gtk.Button(icon_name='list-add-symbolic')
         self._add_btn.set_tooltip_text('Create snapshot')
         self._add_btn.set_sensitive(False)
         self._add_btn.connect('clicked', self._on_create_snapshot)
         header.pack_end(self._add_btn)
 
-        # Refresh button
         refresh_btn = Gtk.Button(icon_name='view-refresh-symbolic')
         refresh_btn.set_tooltip_text('Refresh')
         refresh_btn.connect('clicked', lambda _: self._load_subvolumes())
@@ -38,10 +35,13 @@ class MainWindow(Adw.ApplicationWindow):
 
         box.append(header)
 
-        scroll = Gtk.ScrolledWindow()
-        scroll.set_vexpand(True)
-        box.append(scroll)
+        # Stack to switch between list, empty state and error state
+        self._stack = Gtk.Stack()
+        self._stack.set_vexpand(True)
+        box.append(self._stack)
 
+        # --- Normal list view ---
+        scroll = Gtk.ScrolledWindow()
         self._list = Gtk.ListBox()
         self._list.set_selection_mode(Gtk.SelectionMode.SINGLE)
         self._list.add_css_class('boxed-list')
@@ -51,6 +51,21 @@ class MainWindow(Adw.ApplicationWindow):
         self._list.set_margin_end(12)
         self._list.connect('row-selected', self._on_row_selected)
         scroll.set_child(self._list)
+        self._stack.add_named(scroll, 'list')
+
+        # --- No snapshots yet ---
+        empty_page = Adw.StatusPage()
+        empty_page.set_icon_name('camera-photo-symbolic')
+        empty_page.set_title('No Snapshots Yet')
+        empty_page.set_description('Select a subvolume and press + to create your first snapshot.')
+        self._stack.add_named(empty_page, 'empty')
+
+        # --- Error state ---
+        error_page = Adw.StatusPage()
+        error_page.set_icon_name('dialog-warning-symbolic')
+        error_page.set_title('Could Not Load Subvolumes')
+        error_page.set_description('Make sure Btrfs is available and you have the required permissions.')
+        self._stack.add_named(error_page, 'error')
 
         self._selected_subvolume = None
         self._load_subvolumes()
@@ -63,7 +78,19 @@ class MainWindow(Adw.ApplicationWindow):
         self._add_btn.set_sensitive(False)
         self._del_btn.set_sensitive(False)
 
-        for sv in btrfs.list_subvolumes():
+        subvolumes = btrfs.list_subvolumes()
+
+        if subvolumes is None:
+            self._stack.set_visible_child_name('error')
+            return
+
+        if not subvolumes:
+            self._stack.set_visible_child_name('empty')
+            return
+
+        has_snapshots = any(btrfs.is_snapshot(sv) for sv in subvolumes)
+
+        for sv in subvolumes:
             row = Adw.ActionRow()
             row.set_title(sv['path'])
             row.set_subtitle(f"ID: {sv['id']}  •  Gen: {sv['gen']}")
@@ -78,6 +105,11 @@ class MainWindow(Adw.ApplicationWindow):
                 row.add_prefix(icon)
 
             self._list.append(row)
+
+        if not has_snapshots:
+            self._stack.set_visible_child_name('empty')
+        else:
+            self._stack.set_visible_child_name('list')
 
     def _on_row_selected(self, listbox, row):
         if row:
