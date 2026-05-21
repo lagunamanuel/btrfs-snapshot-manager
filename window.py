@@ -91,6 +91,8 @@ class MainWindow(Adw.ApplicationWindow):
         has_snapshots = any(btrfs.is_snapshot(sv) for sv in subvolumes)
 
         for sv in subvolumes:
+            if btrfs.is_container(sv):
+                continue
             row = Adw.ActionRow()
             row.set_title(sv['path'])
             row.set_subtitle(f"ID: {sv['id']}  •  Gen: {sv['gen']}")
@@ -114,6 +116,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_row_selected(self, listbox, row):
         if row:
             sv = row._subvolume
+            self._add_btn.set_sensitive(not is_snap and not btrfs.is_container(sv))
             self._selected_subvolume = sv
             is_snap = btrfs.is_snapshot(sv)
             self._add_btn.set_sensitive(not is_snap)
