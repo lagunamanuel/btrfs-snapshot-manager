@@ -85,3 +85,7 @@ def delete_snapshot(path):
         return result.returncode == 0, result.stderr.strip()
     finally:
         subprocess.run(['sudo', 'umount', MOUNT_POINT])
+
+def is_container(subvolume):
+    """Returns True if the subvolume is the .snapshots container itself."""
+    return subvolume['path'] == '.snapshots'
