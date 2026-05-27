@@ -57,7 +57,7 @@ class MainWindow(Adw.ApplicationWindow):
         empty_page = Adw.StatusPage()
         empty_page.set_icon_name('camera-photo-symbolic')
         empty_page.set_title('No Snapshots Yet')
-        empty_page.set_description('Select a subvolume and press + to create your first snapshot.')
+        empty_page.set_description('No snapshots found. Select a subvolume and press + to create one.')
         self._stack.add_named(empty_page, 'empty')
 
         # --- Error state ---
@@ -88,8 +88,6 @@ class MainWindow(Adw.ApplicationWindow):
             self._stack.set_visible_child_name('empty')
             return
 
-        has_snapshots = any(btrfs.is_snapshot(sv) for sv in subvolumes)
-
         for sv in subvolumes:
             if btrfs.is_container(sv):
                 continue
@@ -108,18 +106,14 @@ class MainWindow(Adw.ApplicationWindow):
 
             self._list.append(row)
 
-        if not has_snapshots:
-            self._stack.set_visible_child_name('empty')
-        else:
-            self._stack.set_visible_child_name('list')
+        self._stack.set_visible_child_name('list')
 
     def _on_row_selected(self, listbox, row):
         if row:
             sv = row._subvolume
-            self._add_btn.set_sensitive(not is_snap and not btrfs.is_container(sv))
             self._selected_subvolume = sv
             is_snap = btrfs.is_snapshot(sv)
-            self._add_btn.set_sensitive(not is_snap)
+            self._add_btn.set_sensitive(not is_snap and not btrfs.is_container(sv))
             self._del_btn.set_sensitive(is_snap)
         else:
             self._selected_subvolume = None
