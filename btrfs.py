@@ -89,3 +89,22 @@ def delete_snapshot(path):
 def is_container(subvolume):
     """Returns True if the subvolume is the .snapshots container itself."""
     return subvolume['path'] == '.snapshots'
+
+def get_snapshot_date(name):
+    """Returns the creation date of a snapshot as a string."""
+    device = _get_device()
+    try:
+        subprocess.run(
+            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            check=True
+        )
+        result = subprocess.run(
+            ['sudo', 'btrfs', 'subvolume', 'show', f'{MOUNT_POINT}/.snapshots/{name}'],
+            capture_output=True, text=True
+        )
+        for line in result.stdout.splitlines():
+            if 'Creation time:' in line:
+                return line.split('Creation time:')[1].strip()
+        return None
+    finally:
+        subprocess.run(['sudo', 'umount', MOUNT_POINT])
