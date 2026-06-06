@@ -88,7 +88,7 @@ class MainWindow(Adw.ApplicationWindow):
             self._stack.set_visible_child_name('empty')
             return
 
-        for sv in subvolumes:
+        for sv in sorted(subvolumes, key=lambda sv: sv['id']):
             if btrfs.is_container(sv):
                 continue
             row = Adw.ActionRow()
