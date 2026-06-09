@@ -108,3 +108,30 @@ def get_snapshot_date(name):
         return None
     finally:
         subprocess.run(['sudo', 'umount', MOUNT_POINT])
+def get_snapshot_size(name):
+    """Returns the exclusive size of a snapshot using btrfs qgroup."""
+    device = _get_device()
+    try:
+        subprocess.run(
+            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            check=True
+        )
+        result = subprocess.run(
+            ['sudo', 'btrfs', 'qgroup', 'show', '--raw', f'{MOUNT_POINT}/.snapshots/{name}'],
+            capture_output=True, text=True
+        )
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 4 and parts[3] == f'.snapshots/{name}':
+                return _format_size(int(parts[2]))
+        return None
+    finally:
+        subprocess.run(['sudo', 'umount', MOUNT_POINT])
+
+def _format_size(size_bytes):
+    """Formats bytes into human readable string."""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size_bytes < 1024:
+            return f'{size_bytes:.1f} {unit}'
+        size_bytes /= 1024
+    return f'{size_bytes:.1f} TB'
