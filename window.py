@@ -1,3 +1,5 @@
+from email import header
+
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -34,6 +36,21 @@ class MainWindow(Adw.ApplicationWindow):
         header.pack_end(refresh_btn)
 
         box.append(header)
+
+        # Search bar
+        self._search_bar = Gtk.SearchBar()
+        self._search_entry = Gtk.SearchEntry()
+        self._search_entry.set_hexpand(True)
+        self._search_bar.set_child(self._search_entry)
+        self._search_bar.connect_entry(self._search_entry)
+        self._search_entry.connect('search-changed', self._on_search_changed)
+        box.append(self._search_bar)
+
+# Search button in header
+        search_btn = Gtk.ToggleButton(icon_name='system-search-symbolic')
+        search_btn.set_tooltip_text('Search')
+        search_btn.bind_property('active', self._search_bar, 'search-mode-enabled')
+        header.pack_end(search_btn)
 
         # Stack to switch between list, empty state and error state
         self._stack = Gtk.Stack()
@@ -202,3 +219,11 @@ class MainWindow(Adw.ApplicationWindow):
         )
         dialog.add_response('ok', 'OK')
         dialog.present()
+    def _on_search_changed(self, entry):
+        text = entry.get_text().lower()
+        row = self._list.get_first_child()
+        while row:
+            if hasattr(row, '_subvolume'):
+                visible = text in row._subvolume['path'].lower()
+                row.set_visible(visible)
+            row = row.get_next_sibling()
