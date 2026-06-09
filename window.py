@@ -113,7 +113,8 @@ class MainWindow(Adw.ApplicationWindow):
             if btrfs.is_snapshot(sv):
                 name = sv['path'].split('/')[-1]
                 date = btrfs.get_snapshot_date(name) or 'Unknown date'
-                row.set_subtitle(date)
+                size = btrfs.get_snapshot_size(name) or 'Unknown size'
+                row.set_subtitle(f'{date}  •  {size}')
             else:
                 row.set_subtitle(f"ID: {sv['id']}  •  Gen: {sv['gen']}")
             row._subvolume = sv
