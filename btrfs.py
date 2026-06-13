@@ -18,7 +18,7 @@ def list_subvolumes():
     """Returns a list of Btrfs subvolumes, or None on error."""
     try:
         result = subprocess.run(
-            ['sudo', 'btrfs', 'subvolume', 'list', '/'],
+            ['pkexec', 'btrfs', 'subvolume', 'list', '/'],
             capture_output=True,
             text=True
         )
@@ -54,37 +54,37 @@ def create_snapshot(subvolume_path, name):
     device = _get_device()
     try:
         subprocess.run(
-            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            ['pkexec', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
             check=True
         )
         source = f'{MOUNT_POINT}/{subvolume_path}'
         dest = f'{MOUNT_POINT}/.snapshots/{name}'
         result = subprocess.run(
-            ['sudo', 'btrfs', 'subvolume', 'snapshot', '-r', source, dest],
+            ['pkexec', 'btrfs', 'subvolume', 'snapshot', '-r', source, dest],
             capture_output=True,
             text=True
         )
         return result.returncode == 0, result.stderr.strip()
     finally:
-        subprocess.run(['sudo', 'umount', MOUNT_POINT])
+        subprocess.run(['pkexec', 'umount', MOUNT_POINT])
 
 def delete_snapshot(path):
     """Deletes a snapshot from .snapshots."""
     device = _get_device()
     try:
         subprocess.run(
-            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            ['pkexec', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
             check=True
         )
         target = f'{MOUNT_POINT}/.snapshots/{path.split("/")[-1]}'
         result = subprocess.run(
-            ['sudo', 'btrfs', 'subvolume', 'delete', target],
+            ['pkexec', 'btrfs', 'subvolume', 'delete', target],
             capture_output=True,
             text=True
         )
         return result.returncode == 0, result.stderr.strip()
     finally:
-        subprocess.run(['sudo', 'umount', MOUNT_POINT])
+        subprocess.run(['pkexec', 'umount', MOUNT_POINT])
 
 def is_container(subvolume):
     """Returns True if the subvolume is the .snapshots container itself."""
@@ -95,11 +95,11 @@ def get_snapshot_date(name):
     device = _get_device()
     try:
         subprocess.run(
-            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            ['pkexec', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
             check=True
         )
         result = subprocess.run(
-            ['sudo', 'btrfs', 'subvolume', 'show', f'{MOUNT_POINT}/.snapshots/{name}'],
+            ['pkexec', 'btrfs', 'subvolume', 'show', f'{MOUNT_POINT}/.snapshots/{name}'],
             capture_output=True, text=True
         )
         for line in result.stdout.splitlines():
@@ -107,17 +107,17 @@ def get_snapshot_date(name):
                 return line.split('Creation time:')[1].strip()
         return None
     finally:
-        subprocess.run(['sudo', 'umount', MOUNT_POINT])
+        subprocess.run(['pkexec', 'umount', MOUNT_POINT])
 def get_snapshot_size(name):
     """Returns the exclusive size of a snapshot using btrfs qgroup."""
     device = _get_device()
     try:
         subprocess.run(
-            ['sudo', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
+            ['pkexec', 'mount', '-o', 'subvolid=5,rw', device, MOUNT_POINT],
             check=True
         )
         result = subprocess.run(
-            ['sudo', 'btrfs', 'qgroup', 'show', '--raw', f'{MOUNT_POINT}/.snapshots/{name}'],
+            ['pkexec', 'btrfs', 'qgroup', 'show', '--raw', f'{MOUNT_POINT}/.snapshots/{name}'],
             capture_output=True, text=True
         )
         for line in result.stdout.splitlines():
@@ -126,7 +126,7 @@ def get_snapshot_size(name):
                 return _format_size(int(parts[2]))
         return None
     finally:
-        subprocess.run(['sudo', 'umount', MOUNT_POINT])
+        subprocess.run(['pkexec', 'umount', MOUNT_POINT])
 
 def _format_size(size_bytes):
     """Formats bytes into human readable string."""
