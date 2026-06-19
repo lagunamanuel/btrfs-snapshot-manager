@@ -53,12 +53,21 @@ Type=Application
 Categories=System;
 DESKTOP
 
+# Sudoers rule
+mkdir -p %{buildroot}/etc/sudoers.d
+cat > %{buildroot}/etc/sudoers.d/%{name} << 'SUDOERS'
+# btrfs-snapshot-manager - allow btrfs and mount operations without password
+%wheel ALL=(root) NOPASSWD: /usr/sbin/btrfs, /usr/bin/mount, /usr/bin/umount, /usr/sbin/mount, /usr/sbin/umount
+SUDOERS
+chmod 440 %{buildroot}/etc/sudoers.d/%{name}
+
 %files
 /usr/bin/%{name}
 /usr/share/%{name}/main.py
 /usr/share/%{name}/btrfs.py
 /usr/share/%{name}/window.py
 /usr/share/applications/%{name}.desktop
+%attr(0440, root, root) /etc/sudoers.d/%{name}
 
 %changelog
 * Thu Jun 18 2026 Manuel Laguna <manuel@example.com> - 1.0-1
