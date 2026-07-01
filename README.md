@@ -12,7 +12,7 @@ Built with Python and libadwaita for native GNOME integration.
 - **Delete snapshots** with a confirmation dialog
 - **Search/filter** subvolumes and snapshots by name
 - **Snapshot metadata** — creation date and exclusive disk size
-- **Native execution** — runs seamless Btrfs operations via automated `sudoers.d` policies
+- **Native execution** — runs seamlessly Btrfs operations via automated `sudoers.d` policies
 - **Empty and error states** with native GNOME styling
 
 ## 📸 Screenshots
@@ -34,31 +34,30 @@ sudo btrfs quota enable /
 
 The recommended way to install Btrfs Snapshot Manager on Fedora/RHEL-based systems is via the RPM package. The RPM automatically installs all required dependencies (GTK4, libadwaita, etc.), sets up the desktop entry, and configures a specific `sudoers.d` rule so the app can manage snapshots without prompting for a password.
 
-### Build and Install the RPM (Fedora)
 
-First, ensure you have the RPM build tools installed:
+### Install from Release (recommended)
+
+Download the latest `.rpm` from the [Releases page](https://github.com/lagunamanuel/btrfs-snapshot-manager/releases) and install:
+
 ```bash
-sudo dnf install rpm-build rpmdevtools
+sudo dnf install ./btrfs-snapshot-manager-1.0-1.fc44.noarch.rpm
 ```
 
-Then, clone the repository, build the package, and install it:
-```bash
-git clone [https://github.com/lagunamanuel/btrfs-snapshot-manager](https://github.com/lagunamanuel/btrfs-snapshot-manager)
-cd btrfs-snapshot-manager
+Once installed, launch **Btrfs Snapshot Manager** directly from your GNOME application grid.
 
-# Create the source tarball
+### Build from source
+
+```bash
+sudo dnf install rpm-build rpmdevtools
+git clone https://github.com/lagunamanuel/btrfs-snapshot-manager
+cd btrfs-snapshot-manager
 mkdir -p ~/rpmbuild/SOURCES
 tar czf ~/rpmbuild/SOURCES/btrfs-snapshot-manager-1.0.tar.gz \
     --transform 's/btrfs-snapshot-manager/btrfs-snapshot-manager-1.0/' \
     main.py btrfs.py window.py
-
-# Build the RPM
 rpmbuild -ba btrfs-snapshot-manager.spec
-
-# Install the generated RPM
 sudo dnf install ~/rpmbuild/RPMS/noarch/btrfs-snapshot-manager-1.0-1.*.rpm
 ```
-
 Once installed, you can launch "Btrfs Snapshot Manager" directly from your GNOME application grid.
 
 ### Development Mode (Manual run)
@@ -72,7 +71,7 @@ python3 main.py
 
 ## ⚠️ Compatibility Note
 
-This app is designed for Btrfs systems **without a pre-existing snapshot manager** (e.g. a default Fedora installation). On systems using Snapper (such as openSUSE or Arch-based distros like Garuda), snapshots follow a different structure (`.snapshots/<id>/snapshot` with XML metadata managed by Snapper). Using this app alongside Snapper is **not recommended**, as it may interfere with Snapper's own tracking.
+This app is designed for Btrfs systems **without a pre-existing snapshot manager** (e.g. a default Fedora installation). On systems using Snapper (such as openSUSE or Arch-based distros like Garuda, Omarchy...), snapshots follow a different structure (`.snapshots/<id>/snapshot` with XML metadata managed by Snapper). Using this app alongside Snapper is **not recommended**, as it may interfere with Snapper's own tracking.
 
 ## 🗺️ Roadmap
 
